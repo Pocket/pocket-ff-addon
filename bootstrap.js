@@ -41,6 +41,10 @@ const PREFS = {
 function setDefaultPrefs() {
   let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
   for (let [key, val] in Iterator(PREFS)) {
+    // If someone beat us to setting a default, don't overwrite it.  This can
+    // happen if distribution.ini sets the default first.
+    if (branch.getPrefType(key) != branch.PREF_INVALID)
+      continue;
     switch (typeof val) {
       case "boolean":
         branch.setBoolPref(key, val);
@@ -104,8 +108,10 @@ PocketAboutPage.prototype = {
            Ci.nsIAboutModule.MAKE_UNLINKABLE;
   },
 
-  newChannel: function(aURI) {
-    let channel = Services.io.newChannel(this.chromeURL, null, null);
+  newChannel: function(aURI, aLoadInfo) {
+    let newURI = Services.io.newURI(this.chromeURL, null, null);
+    let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
+                                                            aLoadInfo);
     channel.originalURI = aURI;
     return channel;
   },
@@ -281,26 +287,46 @@ var PocketContextMenu = {
 // PocketReader
 // Listen for reader mode setup and add our button to the reader toolbar
 var PocketReader = {
+  _hidden: true,
+  get hidden() {
+    return this._hidden;
+  },
+  set hidden(hide) {
+    hide = !!hide;
+    if (hide === this._hidden)
+      return;
+    this._hidden = hide;
+    this.update();
+  },
   startup: function() {
+    // Setup the listeners, update will be called when the widget is added,
+    // no need to do that now.
     let mm = Services.mm;
     mm.addMessageListener("Reader:OnSetup", this);
     mm.addMessageListener("Reader:Clicked-pocket-button", this);
-    mm.broadcastAsyncMessage("Reader:AddButton",
-                             { id: "pocket-button",
-                               title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
-                               image: "chrome://pocket/content/panels/img/pocket.svg#pocket-mark" });
   },
   shutdown: function() {
     let mm = Services.mm;
     mm.removeMessageListener("Reader:OnSetup", this);
     mm.removeMessageListener("Reader:Clicked-pocket-button", this);
-    mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
+    this.hidden = true;
+  },
+  update: function() {
+    if (this.hidden) {
+      Services.mm.broadcastAsyncMessage("Reader:RemoveButton", { id: "pocket-button" });
+    } else {
+      Services.mm.broadcastAsyncMessage("Reader:AddButton",
+                               { id: "pocket-button",
+                                 title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
+                                 image: "chrome://pocket/content/panels/img/pocket.svg#pocket-mark" });
+    }
   },
   receiveMessage: function(message) {
     switch (message.name) {
       case "Reader:OnSetup": {
-        // tell the reader about our button.  A chrome url here doesn't work, but
-        // we can use the resoure url.
+        // Tell the reader about our button.
+        if (this.hidden)
+          break;
         message.target.messageManager.
           sendAsyncMessage("Reader:AddButton", { id: "pocket-button",
                                                  title: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
@@ -352,10 +378,10 @@ var PocketOverlay = {
                                                        this._sheetType);
     AboutSaved.register();
     AboutSignup.register();
-    CreatePocketWidget(reason);
-    CustomizableUI.addListener(this);
-    PocketContextMenu.init();
     PocketReader.startup();
+    CustomizableUI.addListener(this);
+    CreatePocketWidget(reason);
+    PocketContextMenu.init();
 
     if (reason != APP_STARTUP) {
       for (let win of allBrowserWindows()) {
@@ -404,6 +430,7 @@ var PocketOverlay = {
   updateWindow: function(window) {
     // insert our three menu items
     let document = window.document;
+    let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
 
     // add to bookmarksMenu
     let sib = document.getElementById("menu_bookmarkThisPage");
@@ -412,10 +439,12 @@ var PocketOverlay = {
         "id": "menu_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "menuitem-iconic", // OSX only
-        "oncommand": "openUILink(Pocket.listURL, event);"
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
       });
       let sep = createElementWithAttrs(document, "menuseparator", {
-        "id": "menu_pocketSeparator"
+        "id": "menu_pocketSeparator",
+        "hidden": hidden
       });
       sib.parentNode.insertBefore(menu, sib);
       sib.parentNode.insertBefore(sep, sib);
@@ -428,10 +457,12 @@ var PocketOverlay = {
         "id": "BMB_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "menuitem-iconic bookmark-item subviewbutton",
-        "oncommand": "openUILink(Pocket.listURL, event);"
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
       });
       let sep = createElementWithAttrs(document, "menuseparator", {
-        "id": "BMB_pocketSeparator"
+        "id": "BMB_pocketSeparator",
+        "hidden": hidden
       });
       sib.parentNode.insertBefore(menu, sib);
       sib.parentNode.insertBefore(sep, sib);
@@ -444,10 +475,12 @@ var PocketOverlay = {
         "id": "panelMenu_pocket",
         "label": gPocketBundle.GetStringFromName("pocketMenuitem.label"),
         "class": "subviewbutton cui-withicon",
-        "oncommand": "openUILink(Pocket.listURL, event);"
+        "oncommand": "openUILink(Pocket.listURL, event);",
+        "hidden": hidden
       });
       let sep = createElementWithAttrs(document, "toolbarseparator", {
-        "id": "panelMenu_pocketSeparator"
+        "id": "panelMenu_pocketSeparator",
+        "hidden": hidden
       });
       // nextSibling is no-id toolbarseparator
       // insert separator first then button
@@ -455,20 +488,12 @@ var PocketOverlay = {
       sib.parentNode.insertBefore(sep, sib);
       sib.parentNode.insertBefore(menu, sib);
     }
-
-    this.updatePocketItemVisibility(document);
   },
-  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
-    for (let win of allBrowserWindows()) {
-      this.updatePocketItemVisibility(win.document);
+  onWidgetAfterDOMChange: function(aWidgetNode) {
+    if (aWidgetNode.id != "pocket-button") {
+      return;
     }
-  },
-  onWidgetRemoved: function(aWidgetId, aArea, aPosition) {
-    for (let win of allBrowserWindows()) {
-      this.updatePocketItemVisibility(win.document);
-    }
-  },
-  updatePocketItemVisibility: function(doc) {
+    let doc = aWidgetNode.ownerDocument;
     let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
     for (let prefix of ["panelMenu_", "menu_", "BMB_"]) {
       let element = doc.getElementById(prefix + "pocket");
@@ -478,11 +503,7 @@ var PocketOverlay = {
       }
     }
     // enable or disable reader button
-    if (hidden) {
-      PocketReader.shutdown();
-    } else {
-      PocketReader.startup();
-    }
+    PocketReader.hidden = hidden;
   },
 
   addStyles: function(win) {
@@ -519,8 +540,7 @@ function startup(data, reason) {
     }
     // watch pref change and enable/disable if necessary
     Services.prefs.addObserver("extensions.pocket.enabled", prefObserver, false);
-    if (Services.prefs.prefHasUserValue("extensions.pocket.enabled") &&
-        !Services.prefs.getBoolPref("extensions.pocket.enabled"))
+    if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
       return;
     PocketOverlay.startup(reason);
   });
