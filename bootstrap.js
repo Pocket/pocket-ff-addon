@@ -41,6 +41,10 @@ const PREFS = {
 function setDefaultPrefs() {
   let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
   for (let [key, val] in Iterator(PREFS)) {
+    // If someone beat us to setting a default, don't overwrite it.  This can
+    // happen if distribution.ini sets the default first.
+    if (branch.getPrefType(key) != branch.PREF_INVALID)
+      continue;
     switch (typeof val) {
       case "boolean":
         branch.setBoolPref(key, val);
@@ -204,7 +208,7 @@ function CreatePocketWidget(reason) {
     }
   });
 
-};
+}
 
 // PocketContextMenu
 // When the context menu is opened check if we need to build and enable pocket UI.
@@ -226,7 +230,7 @@ var PocketContextMenu = {
     }
   },
   observe: function(aSubject, aTopic, aData) {
-    let subject = aSubject.wrappedJSObject;;
+    let subject = aSubject.wrappedJSObject;
     let document = subject.menu.ownerDocument;
     let window = document.defaultView;
     let pocketEnabled = CustomizableUI.getPlacementOfWidget("pocket-button");
@@ -443,7 +447,7 @@ var PocketOverlay = {
     }
 
     // add to bookmarks-menu-button
-    sib = document.getElementById("BMB_subscribeToPageMenuitem");
+    sib = document.getElementById("BMB_bookmarksToolbar");
     if (sib && !document.getElementById("BMB_pocket")) {
       let menu = createElementWithAttrs(document, "menuitem", {
         "id": "BMB_pocket",
@@ -532,8 +536,7 @@ function startup(data, reason) {
     }
     // watch pref change and enable/disable if necessary
     Services.prefs.addObserver("extensions.pocket.enabled", prefObserver, false);
-    if (Services.prefs.prefHasUserValue("extensions.pocket.enabled") &&
-        !Services.prefs.getBoolPref("extensions.pocket.enabled"))
+    if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
       return;
     PocketOverlay.startup(reason);
   });
