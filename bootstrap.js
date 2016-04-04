@@ -41,10 +41,6 @@ const PREFS = {
 function setDefaultPrefs() {
   let branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
   for (let [key, val] in Iterator(PREFS)) {
-    // If someone beat us to setting a default, don't overwrite it.  This can
-    // happen if distribution.ini sets the default first.
-    if (branch.getPrefType(key) != branch.PREF_INVALID)
-      continue;
     switch (typeof val) {
       case "boolean":
         branch.setBoolPref(key, val);
@@ -108,10 +104,8 @@ PocketAboutPage.prototype = {
            Ci.nsIAboutModule.MAKE_UNLINKABLE;
   },
 
-  newChannel: function(aURI, aLoadInfo) {
-    let newURI = Services.io.newURI(this.chromeURL, null, null);
-    let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
-                                                            aLoadInfo);
+  newChannel: function(aURI) {
+    let channel = Services.io.newChannel(this.chromeURL, null, null);
     channel.originalURI = aURI;
     return channel;
   },
@@ -210,7 +204,7 @@ function CreatePocketWidget(reason) {
     }
   });
 
-}
+};
 
 // PocketContextMenu
 // When the context menu is opened check if we need to build and enable pocket UI.
@@ -224,7 +218,7 @@ var PocketContextMenu = {
     // iterate through all windows and add pocket to them
     for (let win of allBrowserWindows()) {
       let document = win.document;
-      for (let id in ["context-pocket", "context-savelinktopocket"]) {
+      for (let id of ["context-pocket", "context-savelinktopocket"]) {
         let element = document.getElementById(id);
         if (element)
           element.remove();
@@ -232,7 +226,7 @@ var PocketContextMenu = {
     }
   },
   observe: function(aSubject, aTopic, aData) {
-    let subject = aSubject.wrappedJSObject;
+    let subject = aSubject.wrappedJSObject;;
     let document = subject.menu.ownerDocument;
     let window = document.defaultView;
     let pocketEnabled = CustomizableUI.getPlacementOfWidget("pocket-button");
@@ -383,12 +377,8 @@ var PocketOverlay = {
     CreatePocketWidget(reason);
     PocketContextMenu.init();
 
-    if (reason != APP_STARTUP) {
-      for (let win of allBrowserWindows()) {
-        this.setWindowScripts(win);
-        this.addStyles(win);
-        this.updateWindow(win);
-      }
+    for (let win of allBrowserWindows()) {
+      this.onWindowOpened(win);
     }
   },
   shutdown: function(reason) {
@@ -414,6 +404,8 @@ var PocketOverlay = {
     PocketReader.shutdown();
   },
   onWindowOpened: function(window) {
+    if (window.hasOwnProperty("pktUI"))
+      return;
     this.setWindowScripts(window);
     this.addStyles(window);
     this.updateWindow(window);
@@ -451,7 +443,7 @@ var PocketOverlay = {
     }
 
     // add to bookmarks-menu-button
-    sib = document.getElementById("BMB_bookmarksToolbar");
+    sib = document.getElementById("BMB_subscribeToPageMenuitem");
     if (sib && !document.getElementById("BMB_pocket")) {
       let menu = createElementWithAttrs(document, "menuitem", {
         "id": "BMB_pocket",
@@ -540,7 +532,8 @@ function startup(data, reason) {
     }
     // watch pref change and enable/disable if necessary
     Services.prefs.addObserver("extensions.pocket.enabled", prefObserver, false);
-    if (!Services.prefs.getBoolPref("extensions.pocket.enabled"))
+    if (Services.prefs.prefHasUserValue("extensions.pocket.enabled") &&
+        !Services.prefs.getBoolPref("extensions.pocket.enabled"))
       return;
     PocketOverlay.startup(reason);
   });
