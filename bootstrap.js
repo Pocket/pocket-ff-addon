@@ -59,17 +59,6 @@ function setDefaultPrefs() {
   }
 }
 
-function* allBrowserWindows() {
-  var winEnum = Services.wm.getEnumerator("navigator:browser");
-  while (winEnum.hasMoreElements()) {
-    let win = winEnum.getNext();
-    // skip closed windows
-    if (win.closed)
-      continue;
-    yield win;
-  }
-}
-
 function createElementWithAttrs(document, type, attrs) {
   let element = document.createElement(type);
   Object.keys(attrs).forEach(function (attr) {
@@ -220,7 +209,7 @@ var PocketContextMenu = {
     Services.obs.removeObserver(this, "on-build-contextmenu");
     // loop through windows and remove context menus
     // iterate through all windows and add pocket to them
-    for (let win of allBrowserWindows()) {
+    for (let win of CustomizableUI.windows) {
       let document = win.document;
       for (let id of ["context-pocket", "context-savelinktopocket"]) {
         let element = document.getElementById(id);
@@ -271,7 +260,7 @@ var PocketContextMenu = {
         "accesskey": gPocketBundle.GetStringFromName("saveLinkToPocketCmd.accesskey"),
         "oncommand": "Pocket.savePage(gContextMenu.browser, gContextMenu.linkURL);"
       });
-      sibling = document.getElementById("context-savelink");
+      let sibling = document.getElementById("context-savelink");
       if (sibling.nextSibling) {
         sibling.parentNode.insertBefore(menu, sibling.nextSibling);
       } else {
@@ -358,6 +347,7 @@ function pktUIGetter(prop, window) {
     get: function() {
       // delete any getters for properties loaded from main.js so we only load main.js once
       delete window.pktUI;
+      delete window.pktApi;
       delete window.pktUIMessaging;
       Services.scriptloader.loadSubScript("chrome://pocket/content/main.js", window);
       return window[prop];
@@ -381,7 +371,7 @@ var PocketOverlay = {
     CreatePocketWidget(reason);
     PocketContextMenu.init();
 
-    for (let win of allBrowserWindows()) {
+    for (let win of CustomizableUI.windows) {
       this.onWindowOpened(win);
     }
   },
@@ -389,7 +379,7 @@ var PocketOverlay = {
     AboutSaved.unregister();
     AboutSignup.unregister();
     CustomizableUI.removeListener(this);
-    for (let window of allBrowserWindows()) {
+    for (let window of CustomizableUI.windows) {
       for (let id of ["panelMenu_pocket", "menu_pocket", "BMB_pocket",
                       "panelMenu_pocketSeparator", "menu_pocketSeparator",
                       "BMB_pocketSeparator"]) {
@@ -400,6 +390,7 @@ var PocketOverlay = {
       this.removeStyles(window);
       // remove script getters/objects
       delete window.Pocket;
+      delete window.pktApi;
       delete window.pktUI;
       delete window.pktUIMessaging;
     }
@@ -419,6 +410,7 @@ var PocketOverlay = {
                                       "chrome://pocket/content/Pocket.jsm");
     // Can't use XPCOMUtils for these because the scripts try to define the variables
     // on window, and so the defineProperty inside defineLazyGetter fails.
+    Object.defineProperty(window, "pktApi", pktUIGetter("pktApi", window));
     Object.defineProperty(window, "pktUI", pktUIGetter("pktUI", window));
     Object.defineProperty(window, "pktUIMessaging", pktUIGetter("pktUIMessaging", window));
   },
