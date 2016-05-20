@@ -128,6 +128,19 @@ var pktUI = (function() {
      * Show the sign-up panel
      */
     function showSignUp() {
+    
+    	// AB test: Direct logged-out users to tab vs panel
+    	if (pktApi.getSignupPanelTabTestVariant() == 'tab')
+    	{
+	        openTabWithUrl('https://getpocket.com/firefox_learnmore?src=ff_ext&s=ffi&t=buttonclick', true);
+	        
+	        // force the panel closed before it opens
+	        getPanel().hidePopup();
+	        
+    		return;
+    	}
+    
+    	// Control: Show panel as normal
         getFirefoxAccountSignedInUser(function(userdata)
         {
             var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
@@ -138,7 +151,7 @@ var pktUI = (function() {
             {
                 startheight = overflowMenuHeight;
             }
-            else if (pktApi.getSignupAB().indexOf('storyboard') > -1)
+            else
             {
                 startheight = 460;
                 if (fxasignedin == '1')
@@ -146,30 +159,20 @@ var pktUI = (function() {
                     startheight = 406;
                 }
             }
-            else
-            {
-                if (fxasignedin == '1')
-                {
-                    startheight = 436;
-                }
-            }
             var variant;
             if (inOverflowMenu)
             {
                 variant = 'overflow';
             }
-            else
-            {
-                variant = pktApi.getSignupAB();
-            }
+            
             var panelId = showPanel("about:pocket-signup?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + variant + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
                     onShow: function() {
                     },
                     onHide: panelDidHide,
                     width: inOverflowMenu ? overflowMenuWidth : 300,
                     height: startheight
-                });
-            });
+			});
+		});
     }
 
     /**
