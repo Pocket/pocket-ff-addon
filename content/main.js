@@ -135,7 +135,9 @@ var pktUI = (function() {
 	        openTabWithUrl('https://getpocket.com/firefox_learnmore?src=ff_ext&s=ffi&t=buttonclick', true);
 	        
 	        // force the panel closed before it opens
-	        getPanel().hidePopup();
+	        // wrapped in setTimeout to avoid race condition after logging out
+	        // if this test goes to 100%, we should move this logic up before the panel is actually opened
+	        setTimeout(function(){getPanel().hidePopup();},0);
 	        
     		return;
     	}
