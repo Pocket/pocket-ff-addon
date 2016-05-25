@@ -119,7 +119,14 @@ PKT_SIGNUP_OVERLAY.prototype = {
         }
 
         // Create actual content
-        $('body').append(Handlebars.templates.signupstoryboard_shell(this.dictJSON));
+        if (this.variant == 'overflow')
+		{
+			$('body').append(Handlebars.templates.signup_shell(this.dictJSON));
+		}
+		else
+		{
+			$('body').append(Handlebars.templates.signupstoryboard_shell(this.dictJSON));
+		}
 
 
         // tell background we're ready

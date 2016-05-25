@@ -166,6 +166,10 @@ var pktUI = (function() {
             {
                 variant = 'overflow';
             }
+            else
+            {
+        		variant = 'storyboard_lm';
+            }
             
             var panelId = showPanel("about:pocket-signup?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + variant + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
                     onShow: function() {
