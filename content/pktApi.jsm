@@ -612,19 +612,16 @@ var pktApi = (function() {
     function getSignupPanelTabTestVariant() {
     	return getSimpleTestOption('panelTab', 0.1, 'tab');
     }
-    
-    function getSimpleTestOption(testName, percent, testOptionName) {
-    
+
+    function getSimpleTestOption(testName, threshold, testOptionName) {
     	// Get the test from preferences if we've already assigned the user to a test
-    	var settingName = 'test.'+testName;
+    	var settingName = 'test.' + testName;
     	var assignedValue = getSetting(settingName);
     	
     	// If not assigned yet, pick and store a value
     	if (!assignedValue)
     	{
-    		var rand = (Math.floor(Math.random()*100+1));
-    		
-    		if (rand <= 100*percent) {
+    		if (Math.random() <= threshold) {
     			assignedValue = testOptionName;
     		}
     		else {
@@ -652,6 +649,6 @@ var pktApi = (function() {
         isPremiumUser: isPremiumUser,
         getSuggestedTagsForItem: getSuggestedTagsForItem,
         getSuggestedTagsForURL: getSuggestedTagsForURL,
-        getSignupPanelTabTestVariant: getSignupPanelTabTestVariant
+        getSignupPanelTabTestVariant: getSignupPanelTabTestVariant,
     };
 }());
