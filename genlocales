@@ -1,0 +1,17 @@
+#!/bin/sh
+rm -rf locales
+EXPECT=`grep '[\.a-zA-Z0-9]*\s=' ../pocket-l10n/locales/en-US/pocket.properties | wc -l | xargs`
+echo "en-US has $EXPECT locale strings"
+cp chrome.manifest.in chrome.manifest
+echo "# generated file do not manually edit" >> chrome.manifest
+for d in ../pocket-l10n/locales/*
+do
+  locale=`basename $d`
+  HAS=`grep '[\.a-zA-Z0-9]*\s=' ../pocket-l10n/locales/$locale/pocket.properties | wc -l | xargs`
+  echo "$locale has $HAS locale strings"
+  if [ "$HAS" == "$EXPECT" ]; then
+    mkdir -p locales/$locale
+    cp -f ../pocket-l10n/locales/$locale/pocket.properties locales/$locale
+    echo "locale pocket $locale locales/$locale/" >> chrome.manifest
+  fi
+done

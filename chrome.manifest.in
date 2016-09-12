@@ -1,4 +1,4 @@
-# changes in this file will need to be reflected in jar.mn when imported to the firefox repository
+# chrome.manifest will be a generated file, make changes in chrome.manifest.in
 content pocket content/ contentaccessible=yes
 override chrome://pocket/skin/Toolbar.png chrome://pocket/skin/Toolbar-XP.png os=WINNT osversion<6
 override chrome://pocket/skin/Toolbar.png chrome://pocket/skin/Toolbar-aero.png os=WINNT osversion=6
@@ -21,4 +21,3 @@ skin pocket classic/1.0 skin/linux/ os=Linux
 skin pocket classic/1.0 skin/osx/ os=Darwin
 skin pocket classic/1.0 skin/windows/ os=WINNT
 skin pocket-shared classic/1.0 skin/shared/
-locale pocket en-US locales/en-US/
