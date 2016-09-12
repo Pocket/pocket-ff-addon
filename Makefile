@@ -10,7 +10,7 @@ rdf:
 xpi:
 	zip -rD pocket.xpi install.rdf bootstrap.js chrome.manifest content/ skin/ locale/
 
-land: l10n rdf
+land: l10n
 	bash -c "python ./bin/generateLocaleJar.py"
 	cp -f moz.build ../mozilla-inbound/browser/extensions/pocket/
 	cp -f jar.mn ../mozilla-inbound/browser/extensions/pocket/
@@ -19,4 +19,4 @@ land: l10n rdf
 	cp -rf content ../mozilla-inbound/browser/extensions/pocket/
 	cp -rf skin ../mozilla-inbound/browser/extensions/pocket/
 	cp -rf locale ../mozilla-inbound/browser/extensions/pocket/
-	cp -f locale.moz.build ../mozilla-inbound/browser/extensions/pocket/locale/
+	cp -f locale.moz.build ../mozilla-inbound/browser/extensions/pocket/locale/moz.build
