@@ -10,8 +10,8 @@ do
   HAS=`grep '[\.a-zA-Z0-9]*\s=' ../pocket-l10n/locales/$locale/pocket.properties | wc -l | xargs`
   echo "$locale has $HAS locale strings"
   if [ "$HAS" == "$EXPECT" ]; then
-    mkdir -p locales/$locale
-    cp -f ../pocket-l10n/locales/$locale/pocket.properties locales/$locale
-    echo "locale pocket $locale locales/$locale/" >> chrome.manifest
+    mkdir -p locale/$locale
+    cp -f ../pocket-l10n/locales/$locale/pocket.properties locale/$locale
+    echo "locale pocket $locale locale/$locale/" >> chrome.manifest
   fi
 done
