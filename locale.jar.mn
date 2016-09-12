@@ -1,0 +1,19 @@
+#filter substitution
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# These are used for the big if statement, as the preprocessor can't handle
+# dashes.
+#define en_US en-US
+
+[features/firefox@getpocket.com] @AB_CD@.jar:
+% locale pocket @AB_CD@ %locale/@AB_CD@/
+  # For locales we support, include the file from the locale's directory in the
+  # source tree.
+  # For other locales (and en-US) fallback to the en-US directory.
+#if AB_CD == en_US
+  locale/@AB_CD@/                (@AB_CD@/*)
+#else
+  locale/@AB_CD@/                (en-US/*)
+#endif
