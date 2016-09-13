@@ -22,7 +22,7 @@ import localeUtils
 # defaults
 DEF_L10N_DST = os.path.join("locale")
 DEF_JAR_FILE_NAME = os.extsep.join(["locale", "jar", "mn"])
-DST_JAR_FILE_NAME = os.path.join("locale", os.extsep.join(["jar", "mn"]))
+DST_JAR_FILE_NAME = os.path.join("build", "locale", os.extsep.join(["jar", "mn"]))
 
 
 def main(l10n_dst, jar_file_name):
