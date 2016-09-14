@@ -610,7 +610,7 @@ var pktApi = (function() {
      * Helper function to get current signup AB group the user is in
      */
     function getSignupPanelTabTestVariant() {
-        return getSimpleTestOption('panelTab', 0.1, 'tab');
+        return getMultipleTestOption('panelSignUp', {control: 2, v1: 7, v2: 1 })
     }
 
     function getSimpleTestOption(testName, threshold, testOptionName) {
@@ -634,6 +634,30 @@ var pktApi = (function() {
         return assignedValue;
     }
 
+    function getMultipleTestOption(testName, testOptions) {
+        // Get the test from preferences if we've already assigned the user to a test
+        var settingName = 'test.' + testName;
+        var assignedValue = getSetting(settingName);
+        var valArray = [];
+
+        // If not assigned yet, pick and store a value
+        if (!assignedValue)
+        {
+            // Get a weighted array of test variants from the testOptions object
+            Object.keys(testOptions).forEach(function(key) {
+              for (var i = 0; i < testOptions[key]; i++) {
+                valArray.push(key)
+              }
+            });
+
+            // Get a random test variant and set the user to it
+            assignedValue = valArray[Math.floor(Math.random() * valArray.length)]
+            setSetting(settingName, assignedValue)
+        }
+
+        return assignedValue;
+
+    }
 
     /**
      * Public functions

@@ -18,6 +18,7 @@ var PKT_SIGNUP_OVERLAY = function (options)
     this.autocloseTimer = null;
     this.variant = "";
     this.inoverflowmenu = false;
+    this.controlvariant;
     this.pockethost = "getpocket.com";
     this.fxasignedin = false;
     this.dictJSON = {};
@@ -52,10 +53,26 @@ var PKT_SIGNUP_OVERLAY = function (options)
             return sanitizeMap[str];
         });
     };
-    this.getTranslations = function()
-    {
-        this.dictJSON = window.pocketStrings;
+    this.getTranslations = function() {
+        this.dictJSON = this.setLinks(window.pocketStrings, {
+            tos: [
+                'https://getpocket.com/tos?s=ffi&t=tos&tv=panel_tryit',
+                'https://getpocket.com/privacy?s=ffi&t=privacypolicy&tv=panel_tryit',
+            ]
+        });
     };
+    this.setLinks = function(stringObject, replaceObject) {
+        var re = /\*/i;
+        for (var prop in replaceObject) {
+            for (var i = 0; i < replaceObject[prop].length; i++) {
+                if(stringObject[prop]){
+                    stringObject[prop] = stringObject[prop].replace(re, replaceObject[prop][i])
+                }
+            }
+        }
+        return stringObject
+    }
+
 };
 
 PKT_SIGNUP_OVERLAY.prototype = {
@@ -63,6 +80,11 @@ PKT_SIGNUP_OVERLAY.prototype = {
     {
         var myself = this;
 
+        var controlvariant = window.location.href.match(/controlvariant=([\w|\.]*)&?/);
+        if (controlvariant && controlvariant.length > 1)
+        {
+            this.controlvariant = controlvariant[1];
+        }
         var variant = window.location.href.match(/variant=([\w|\.]*)&?/);
         if (variant && variant.length > 1)
         {
@@ -98,6 +120,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         // set translations
         this.getTranslations();
         this.dictJSON.fxasignedin = this.fxasignedin ? 1 : 0;
+        this.dictJSON.controlvariant = this.controlvariant == 'true' ? 1 : 0;
         this.dictJSON.variant = (this.variant ? this.variant : 'undefined');
         this.dictJSON.variant += this.fxasignedin ? '_fxa' : '_nonfxa';
         this.dictJSON.pockethost = this.pockethost;
