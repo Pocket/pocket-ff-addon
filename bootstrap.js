@@ -133,10 +133,10 @@ function CreatePocketWidget(reason) {
   // the browser.
   let SocialService;
   try {
-    SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-  } catch (e) {
     // For Firefox 51+
     SocialService = Cu.import("resource:///modules/SocialService.jsm", {}).SocialService;
+  } catch (e) {
+    SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
   }
 
   let origin = "https://getpocket.com";

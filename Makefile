@@ -12,7 +12,9 @@ build:
 	cp -rf skin build/
 	cp -rf locale build/
 	cp install.rdf.in build/install.rdf
+	# set min and max firefox versions for this build
 	bash -c "sed -i -e 's/@MOZ_APP_MAXVERSION@/51.0/g' build/install.rdf"
+	bash -c "sed -i -e 's/@MOZ_APP_VERSION@/48.0/g' build/install.rdf"
 	rm build/install.rdf-e
 
 xpi:
@@ -20,7 +22,7 @@ xpi:
 	zip -rD pocket.xpi install.rdf bootstrap.js chrome.manifest content/ skin/ locale/
 	cd ..
 
-land: build
+land: clean build
 	rm build/install.rdf
 	rm build/chrome.manifest
 	bash -c "python ./bin/generateLocaleJar.py"
