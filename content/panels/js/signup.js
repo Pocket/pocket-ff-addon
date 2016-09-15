@@ -55,23 +55,23 @@ var PKT_SIGNUP_OVERLAY = function (options)
     };
     this.getTranslations = function() {
         this.dictJSON = this.setLinks(window.pocketStrings, {
-            tos: [
-                'https://'+ this.pockethost +'/tos?s=ffi&t=tos&tv=panel_tryit',
-                'https://'+ this.pockethost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit',
-            ]
+            tos: {
+                tos_link: 'https://'+ this.pockethost +'/tos?s=ffi&t=tos&tv=panel_tryit',
+                privacy_link: 'https://'+ this.pockethost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
+            }
         });
     };
-    this.setLinks = function(stringObject, replaceObject) {
-        var re = /\*/i;
+    this.setLinks = function(stringObject, replaceObject){
         for (var prop in replaceObject) {
-            for (var i = 0; i < replaceObject[prop].length; i++) {
-                if(stringObject[prop]){
-                    stringObject[prop] = stringObject[prop].replace(re, replaceObject[prop][i])
+            if(stringObject[prop]) {
+                for (var key in replaceObject[prop]) {
+                    var regex = new RegExp('(\\[' + key + '\\])', 'i');
+                    stringObject[prop] = stringObject[prop].replace(regex, replaceObject[prop][key]);
                 }
             }
         }
-        return stringObject
-    }
+        return stringObject;
+    };
 
 };
 
