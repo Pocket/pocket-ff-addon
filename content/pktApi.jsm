@@ -625,13 +625,13 @@ var pktApi = (function() {
             // Get a weighted array of test variants from the testOptions object
             Object.keys(testOptions).forEach(function(key) {
               for (var i = 0; i < testOptions[key]; i++) {
-                valArray.push(key)
+                valArray.push(key);
               }
             });
 
             // Get a random test variant and set the user to it
-            assignedValue = valArray[Math.floor(Math.random() * valArray.length)]
-            setSetting(settingName, assignedValue)
+            assignedValue = valArray[Math.floor(Math.random() * valArray.length)];
+            setSetting(settingName, assignedValue);
         }
 
         return assignedValue;
