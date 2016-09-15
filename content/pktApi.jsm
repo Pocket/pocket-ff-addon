@@ -613,27 +613,6 @@ var pktApi = (function() {
         return getMultipleTestOption('panelSignUp', {control: 2, v1: 7, v2: 1 })
     }
 
-    function getSimpleTestOption(testName, threshold, testOptionName) {
-        // Get the test from preferences if we've already assigned the user to a test
-        var settingName = 'test.' + testName;
-        var assignedValue = getSetting(settingName);
-
-        // If not assigned yet, pick and store a value
-        if (!assignedValue)
-        {
-            if (Math.random() <= threshold) {
-                assignedValue = testOptionName;
-            }
-            else {
-                assignedValue = 'control';
-            }
-
-            setSetting('test.'+testName, assignedValue);
-        }
-
-        return assignedValue;
-    }
-
     function getMultipleTestOption(testName, testOptions) {
         // Get the test from preferences if we've already assigned the user to a test
         var settingName = 'test.' + testName;

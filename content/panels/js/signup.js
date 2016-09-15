@@ -56,8 +56,8 @@ var PKT_SIGNUP_OVERLAY = function (options)
     this.getTranslations = function() {
         this.dictJSON = this.setLinks(window.pocketStrings, {
             tos: [
-                'https://getpocket.com/tos?s=ffi&t=tos&tv=panel_tryit',
-                'https://getpocket.com/privacy?s=ffi&t=privacypolicy&tv=panel_tryit',
+                'https://'+ this.pockethost +'/tos?s=ffi&t=tos&tv=panel_tryit',
+                'https://'+ this.pockethost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit',
             ]
         });
     };

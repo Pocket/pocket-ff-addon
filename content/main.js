@@ -132,7 +132,7 @@ var pktUI = (function() {
         if (pktApi.getSignupPanelTabTestVariant() == 'tab')
         {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
-            openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext&s=ffi', true);
+            openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext', true);
 
             // force the panel closed before it opens
             getPanel().hidePopup();
@@ -146,7 +146,7 @@ var pktUI = (function() {
             var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
             var startheight = 490;
             var inOverflowMenu = isInOverflowMenu();
-            var controlvariant = (pktApi.getSignupPanelTabTestVariant() == 'control')
+            var controlvariant = pktApi.getSignupPanelTabTestVariant() == 'control'
 
             if (inOverflowMenu)
             {
@@ -160,8 +160,8 @@ var pktUI = (function() {
                     startheight = 406;
                 }
             }
-            if(!controlvariant){
-                startheight=427
+            if (!controlvariant) {
+                startheight = 427
             }
             var variant;
             if (inOverflowMenu)
@@ -173,7 +173,18 @@ var pktUI = (function() {
                 variant = 'storyboard_lm';
             }
 
-            var panelId = showPanel("about:pocket-signup?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + variant + '&controlvariant='+ controlvariant + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
+            var panelId = showPanel("about:pocket-signup?pockethost="
+                + Services.prefs.getCharPref("extensions.pocket.site")
+                + "&fxasignedin="
+                + fxasignedin
+                + "&variant="
+                + variant
+                + '&controlvariant='
+                + controlvariant
+                + '&inoverflowmenu='
+                + inOverflowMenu
+                + "&locale="
+                + getUILocale(), {
                     onShow: function() {
                     },
                     onHide: panelDidHide,

@@ -32,8 +32,8 @@
 }
 .pkt_ext_cf:after {
     content: " ";
-    display:table;
-    clear:both;
+    display: table;
+    clear: both;
 }
 @keyframes pkt_ext_hide {
     0% {
@@ -145,11 +145,11 @@
     margin-top: 22px;
 }
 .pkt_ext_signupdetail p.pkt_ext_tos{
-    color:#777;
+    color: #777;
     font-size: 10px;
-    line-height:1.5;
+    line-height: 1.5;
     margin-top: 17px;
-    padding-top:0;
+    padding-top: 0;
     max-width: 190px;
 }
 
@@ -291,7 +291,7 @@
     padding: 0;
 }
 .pkt_ext_containersignup .signup-btn-tryitnow{
-    margin-top:25px;
+    margin-top: 25px;
 }
 .pkt_ext_containersignup .signup-btn-firefox .logo {
     background: url(../img/signup_firefoxlogo@1x.png) center center no-repeat;
