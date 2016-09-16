@@ -146,7 +146,7 @@ var pktUI = (function() {
             var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
             var startheight = 490;
             var inOverflowMenu = isInOverflowMenu();
-            var controlvariant = pktApi.getSignupPanelTabTestVariant() == 'control'
+            var controlvariant = pktApi.getSignupPanelTabTestVariant() == 'control';
 
             if (inOverflowMenu)
             {
@@ -161,7 +161,7 @@ var pktUI = (function() {
                 }
             }
             if (!controlvariant) {
-                startheight = 427
+                startheight = 427;
             }
             var variant;
             if (inOverflowMenu)
