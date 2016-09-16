@@ -484,7 +484,11 @@ var pktUI = (function() {
             var e = bundle.getSimpleEnumeration();
             while (e.hasMoreElements()) {
                 var str = e.getNext().QueryInterface(Components.interfaces.nsIPropertyElement);
-                strings[str.key] = str.value;
+                if (str.key in data) {
+                    strings[str.key] = bundle.formatStringFromName(str.key, data[str.key], data[str.key].length);
+                } else {
+                    strings[str.key] = str.value;
+                }
             }
             pktUIMessaging.sendResponseMessageToPanel(panelId, _initL10NMessageId, { strings: strings });
         });
