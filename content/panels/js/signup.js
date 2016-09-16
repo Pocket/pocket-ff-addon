@@ -53,24 +53,9 @@ var PKT_SIGNUP_OVERLAY = function (options)
             return sanitizeMap[str];
         });
     };
-    this.getTranslations = function() {
-        this.dictJSON = this.setLinks(window.pocketStrings, {
-            tos: {
-                tos_link: 'https://'+ this.pockethost +'/tos?s=ffi&t=tos&tv=panel_tryit',
-                privacy_link: 'https://'+ this.pockethost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
-            }
-        });
-    };
-    this.setLinks = function(stringObject, replaceObject){
-        for (var prop in replaceObject) {
-            if(stringObject[prop]) {
-                for (var key in replaceObject[prop]) {
-                    var regex = new RegExp('(\\[' + key + '\\])', 'i');
-                    stringObject[prop] = stringObject[prop].replace(regex, replaceObject[prop][key]);
-                }
-            }
-        }
-        return stringObject;
+    this.getTranslations = function()
+    {
+        this.dictJSON = window.pocketStrings;
     };
 
 };
@@ -196,8 +181,14 @@ $(function()
         thePKT_SIGNUP.init();
     }
 
+    var pocketHost = thePKT_SIGNUP.overlay.pockethost;
     // send an async message to get string data
-    thePKT_SIGNUP.sendMessage("initL10N", {}, function(resp) {
+    thePKT_SIGNUP.sendMessage("initL10N", {
+            tos: [
+                'https://'+ pocketHost +'/tos?s=ffi&t=tos&tv=panel_tryit',
+                'https://'+ pocketHost +'/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
+            ]
+        }, function(resp) {
         window.pocketStrings = resp.strings;
         window.thePKT_SIGNUP.create();
     });
