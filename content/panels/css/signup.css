@@ -380,8 +380,8 @@
 }
 .pkt_ext_signup_ja .signup-btn-firefox .text,
 .pkt_ext_signup_ja .signup-btn-tryitnow .text,
-.pkt_ext_signup_ru .signup-btn-firefox .text
-.pkt_ext_signup_ru .signup-btn-tryitnow .text, {
+.pkt_ext_signup_ru .signup-btn-firefox .text,
+.pkt_ext_signup_ru .signup-btn-tryitnow .text {
     left: 15px;
 }
 .pkt_ext_signup_de .signup-btn-firefox .logo,
