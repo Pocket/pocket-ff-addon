@@ -25,6 +25,7 @@ xpi:
 land: clean build
 	rm build/install.rdf
 	rm build/chrome.manifest
+	bash -c "hg rm ../mozilla-inbound/browser/extensions/pocket/locale/*"
 	bash -c "python ./bin/generateLocaleJar.py"
 	cp -f moz.build ../mozilla-inbound/browser/extensions/pocket/
 	cp -f jar.mn ../mozilla-inbound/browser/extensions/pocket/
@@ -32,3 +33,4 @@ land: clean build
 	cp -f install.rdf.in ../mozilla-inbound/browser/extensions/pocket/
 	cp -rf build/* ../mozilla-inbound/browser/extensions/pocket/
 	cp -f locale.moz.build ../mozilla-inbound/browser/extensions/pocket/locale/moz.build
+	hg add ../mozilla-inbound/browser/extensions/pocket/locale/*
