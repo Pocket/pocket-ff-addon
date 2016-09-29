@@ -1,3 +1,5 @@
+MOZILLA_BUILD=../mozilla-central
+
 all: clean build xpi
 
 clean:
@@ -25,12 +27,12 @@ xpi:
 land: clean build
 	rm build/install.rdf
 	rm build/chrome.manifest
-	bash -c "hg rm ../mozilla-central/browser/extensions/pocket/locale/*"
+	bash -c "hg rm $(MOZILLA_BUILD)/browser/extensions/pocket/locale/*"
 	bash -c "python ./bin/generateLocaleJar.py"
-	cp -f moz.build ../mozilla-central/browser/extensions/pocket/
-	cp -f jar.mn ../mozilla-central/browser/extensions/pocket/
-	cp -f chrome.manifest.in ../mozilla-central/browser/extensions/pocket/chrome.manifest
-	cp -f install.rdf.in ../mozilla-central/browser/extensions/pocket/
-	cp -rf build/* ../mozilla-central/browser/extensions/pocket/
-	cp -f locale.moz.build ../mozilla-central/browser/extensions/pocket/locale/moz.build
-	hg add ../mozilla-central/browser/extensions/pocket/locale/*
+	cp -f moz.build $(MOZILLA_BUILD)/browser/extensions/pocket/
+	cp -f jar.mn $(MOZILLA_BUILD)/browser/extensions/pocket/
+	cp -f chrome.manifest.in $(MOZILLA_BUILD)/browser/extensions/pocket/chrome.manifest
+	cp -f install.rdf.in $(MOZILLA_BUILD)/browser/extensions/pocket/
+	cp -rf build/* $(MOZILLA_BUILD)/browser/extensions/pocket/
+	cp -f locale.moz.build $(MOZILLA_BUILD)/browser/extensions/pocket/locale/moz.build
+	hg add $(MOZILLA_BUILD)/browser/extensions/pocket/locale/*
