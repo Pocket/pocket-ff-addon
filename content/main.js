@@ -70,6 +70,9 @@ var pktUI = (function() {
     var savePanelWidth = 350;
     var savePanelHeights = {collapsed: 153, expanded: 272};
 
+    // Weak reference tab variable used for opening a single sign-up tab
+    var wrTab;
+
     // -- Event Handling -- //
 
     /**
@@ -132,7 +135,7 @@ var pktUI = (function() {
         if (pktApi.getSignupPanelTabTestVariant() == 'v2')
         {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
-            openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext', true);
+            openStaticTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext');
 
             // force the panel closed before it opens
             getPanel().hidePopup();
@@ -496,6 +499,21 @@ var pktUI = (function() {
     }
 
     // -- Browser Navigation -- //
+
+    /**
+     * Open a new tab with a given url if that url is not currently open
+     */
+
+    function openStaticTabWithUrl(tabUrl) {
+        if (wrTab && wrTab.get()) {
+            window.gBrowser.getBrowserForTab(wrTab.get()).loadURI(tabUrl);
+            window.gBrowser.selectedTab = wrTab.get();
+        } else {
+            // open a new tab again
+            let newTab = window.gBrowser.addTab(tabUrl);
+            wrTab = Cu.getWeakReference(newTab);
+        }
+    }
 
     /**
      * Open a new tab with a given url and notify the iframe panel that it was opened
