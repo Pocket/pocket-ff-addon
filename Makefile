@@ -20,6 +20,8 @@ build:
 	rm build/install.rdf-e
 
 xpi:
+	bash -c "sed -i -e 's/#filter substitution//g' build/install.rdf"
+	rm build/install.rdf-e
 	cd build && \
 	zip -rD pocket.xpi install.rdf bootstrap.js chrome.manifest content/ skin/ locale/ && \
 	cd ..
