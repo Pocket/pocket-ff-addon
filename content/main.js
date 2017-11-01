@@ -68,6 +68,8 @@ var pktUI = (function() {
     var savePanelWidth = 350;
     var savePanelHeights = {collapsed: 153, expanded: 272};
 
+    var _lastAddSucceeded = false;
+
     // -- Event Handling -- //
 
     /**
@@ -88,8 +90,33 @@ var pktUI = (function() {
 
         // clear the panel
         getPanelFrame().setAttribute("src", "about:blank");
+
+        if (_lastAddSucceeded) {
+            var libraryButton = document.getElementById("library-button");
+            if (!Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") ||
+                !libraryButton ||
+                libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
+                libraryButton.getAttribute("overflowedItem") == "true" ||
+                !libraryButton.closest("#nav-bar")) {
+                return;
+            }
+            libraryButton.removeAttribute("fade");
+            libraryButton.setAttribute("animate", "pocket");
+            libraryButton.addEventListener("animationend", onLibraryButtonAnimationEnd);
+        }
     }
 
+    function onLibraryButtonAnimationEnd(event) {
+        let doc = event.target.ownerDocument;
+        let libraryButton = doc.getElementById("library-button");
+        if (event.animationName.startsWith("library-pocket-animation")) {
+            libraryButton.setAttribute("fade", "true");
+        } else if (event.animationName == "library-pocket-fade") {
+            libraryButton.removeEventListener("animationend", onLibraryButtonAnimationEnd);
+            libraryButton.removeAttribute("animate");
+            libraryButton.removeAttribute("fade");
+        }
+    }
 
     // -- Communication to API -- //
 
@@ -197,6 +224,8 @@ var pktUI = (function() {
         var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0") + "&inoverflowmenu=" + inOverflowMenu + "&locale=" + getUILocale(), {
             onShow() {
                 var saveLinkMessageId = "saveLink";
+                _lastAddSucceeded = false;
+                getPanelFrame().setAttribute("itemAdded", "false");
 
                 // Send error message for invalid url
                 if (!isValidURL) {
@@ -228,6 +257,8 @@ var pktUI = (function() {
                             item
                         };
                         pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
+                        _lastAddSucceeded = true;
+                        getPanelFrame().setAttribute("itemAdded", "true");
                     },
                     error(error, request) {
                         // If user is not authorized show singup page
@@ -239,12 +270,12 @@ var pktUI = (function() {
                         // If there is no error message in the error use a
                         // complete catch-all
                         var errorMessage = error.message || "There was an error when trying to save to Pocket.";
-                        var panelError = { message: errorMessage}
+                        var panelError = { message: errorMessage};
 
                         // Send error message to panel
                         pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, panelError);
                     }
-                }
+                };
 
                 // Add title if given
                 if (typeof title !== "undefined") {
@@ -307,17 +338,10 @@ var pktUI = (function() {
      */
     function resizePanel(options) {
         var iframe = getPanelFrame();
-        var subview = getSubview();
 
-        if (subview) {
-          // Use the subview's size
-          iframe.style.width = "100%";
-          iframe.style.height = subview.parentNode.clientHeight + "px";
-        } else {
-          // Set an explicit size, panel will adapt.
-          iframe.style.width  = options.width + "px";
-          iframe.style.height = options.height + "px";
-        }
+        // Set an explicit size, panel will adapt.
+        iframe.style.width  = options.width + "px";
+        iframe.style.height = options.height + "px";
     }
 
     /**
@@ -427,13 +451,13 @@ var pktUI = (function() {
                         value: {
                             suggestedTags
                         }
-                    }
+                    };
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, successResponse);
                 },
                 error(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _getSuggestedTagsMessageId, error);
                 }
-            })
+            });
         });
 
         // Pass url and array list of tags, add to existing save item accordingly
@@ -457,11 +481,13 @@ var pktUI = (function() {
                 success(data, response) {
                     var successResponse = {status: "success"};
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _deleteItemMessageId, successResponse);
+                    _lastAddSucceeded = false;
+                    getPanelFrame().setAttribute("itemAdded", "false");
                 },
                 error(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);
                 }
-            })
+            });
         });
 
         var _initL10NMessageId = "initL10N";
@@ -537,28 +563,18 @@ var pktUI = (function() {
         return panel;
     }
 
-    function getPanelFrame() {
-        var frame = document.getElementById("pocket-panel-iframe");
-        if (!frame) {
-            var frameParent = document.getElementById("PanelUI-pocketView").firstChild;
-            frame = document.createElement("iframe");
-            frame.id = "pocket-panel-iframe";
-            frame.setAttribute("type", "content");
-            frameParent.appendChild(frame);
-        }
-        return frame;
+    var photonPageActionPanelFrame;
+
+    function setPhotonPageActionPanelFrame(frame) {
+        photonPageActionPanelFrame = frame;
     }
 
-    function getSubview() {
-        var view = document.getElementById("PanelUI-pocketView");
-        if (view && view.getAttribute("current") == "true")
-            return view;
-        return null;
+    function getPanelFrame() {
+        return photonPageActionPanelFrame;
     }
 
     function isInOverflowMenu() {
-        var subview = getSubview();
-        return !!subview;
+        return false;
     }
 
     function getFirefoxAccountSignedInUser(callback) {
@@ -577,6 +593,7 @@ var pktUI = (function() {
      * Public functions
      */
     return {
+        setPhotonPageActionPanelFrame,
         getPanelFrame,
 
         openTabWithUrl,
@@ -679,11 +696,11 @@ var pktUIMessaging = (function() {
         // happens, it means some race condition occurred where the panel was
         // trying to communicate before it should.
         if (panelId === 0) {
-            console.warn("Tried to send message to panel with id 0.")
+            console.warn("Tried to send message to panel with id 0.");
             return false;
         }
 
-        return true
+        return true;
     }
 
     function isPocketPanelFrameValid(panelFrame) {
@@ -724,5 +741,5 @@ var pktUIMessaging = (function() {
         sendResponseMessageToPanel,
         sendErrorMessageToPanel,
         sendErrorResponseMessageToPanel
-    }
+    };
 }());
