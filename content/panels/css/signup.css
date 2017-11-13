@@ -144,7 +144,7 @@
 .pkt_ext_containersignup .tryitnowspace {
     margin-top: 22px;
 }
-.pkt_ext_signupdetail p.pkt_ext_tos{
+.pkt_ext_signupdetail p.pkt_ext_tos {
     color: #777;
     font-size: 10px;
     line-height: 1.5;
@@ -380,8 +380,8 @@
 }
 .pkt_ext_signup_ja .signup-btn-firefox .text,
 .pkt_ext_signup_ja .signup-btn-tryitnow .text,
-.pkt_ext_signup_ru .signup-btn-firefox .text
-.pkt_ext_signup_ru .signup-btn-tryitnow .text, {
+.pkt_ext_signup_ru .signup-btn-firefox .text,
+.pkt_ext_signup_ru .signup-btn-tryitnow .text {
     left: 15px;
 }
 .pkt_ext_signup_de .signup-btn-firefox .logo,
