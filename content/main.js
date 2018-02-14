@@ -221,7 +221,12 @@ var pktUI = (function() {
             startheight = overflowMenuHeight;
         }
 
-        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0") + "&inoverflowmenu=" + inOverflowMenu + "&locale=" + getUILocale(), {
+        var panelId = showPanel("about:pocket-saved?pockethost="
+            + Services.prefs.getCharPref("extensions.pocket.site")
+            + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0")
+            + "&fxasignedin=" + ((typeof userdata == "object" && userdata !== null) ? "1" : "0")
+            + "&inoverflowmenu=" + inOverflowMenu
+            + "&locale=" + getUILocale(), {
             onShow() {
                 var saveLinkMessageId = "saveLink";
                 _lastAddSucceeded = false;
@@ -252,9 +257,15 @@ var pktUI = (function() {
                 var options = {
                     success(data, request) {
                         var item = data.item;
+                        var ho2 = data.ho2;
+                        var accountState = data.account_state;
+                        var displayName = data.display_name;
                         var successResponse = {
                             status: "success",
-                            item
+                            accountState,
+                            displayName,
+                            item,
+                            ho2
                         };
                         pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
                         _lastAddSucceeded = true;
@@ -408,6 +419,35 @@ var pktUI = (function() {
         pktUIMessaging.addMessageListener(iframe, _getCurrentURLMessageId, function(panelId, data) {
             pktUIMessaging.sendResponseMessageToPanel(panelId, _getCurrentURLMessageId, getCurrentUrl());
         });
+
+        // Get article info
+        var _getArticleInfoMessageId = "getArticleInfo";
+        pktUIMessaging.addMessageListener(iframe, _getArticleInfoMessageId, function(panelId, data) {
+            pktApi.getArticleInfo(getCurrentUrl(), {
+                success: function(res, req) {
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getArticleInfoMessageId, res);
+                },
+                error: function(err, req) {
+                    err.fallback_title = getCurrentTitle();
+                    err.fallback_domain = new URL(getCurrentUrl()).hostname;
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getArticleInfoMessageId, err);
+                }
+            });
+        });
+
+        // getMobileDownload
+        var _getMobileDownloadMessageId = "getMobileDownload";
+        pktUIMessaging.addMessageListener(iframe, _getMobileDownloadMessageId, function(panelId, data) {
+            pktApi.getMobileDownload({
+                success: function(res, req) {
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getMobileDownloadMessageId, res);
+                },
+                error: function(err, req) {
+                    pktUIMessaging.sendResponseMessageToPanel(panelId, _getMobileDownloadMessageId, err);
+                }
+            });
+        });
+
 
         var _resizePanelMessageId = "resizePanel";
         pktUIMessaging.addMessageListener(iframe, _resizePanelMessageId, function(panelId, data) {

@@ -60,7 +60,6 @@ var pktApi = (function() {
     var pocketSiteHost = Services.prefs.getCharPref("extensions.pocket.site"); // getpocket.com
     var baseAPIUrl = "https://" + pocketAPIhost + "/v3";
 
-
     /**
      * Auth keys for the API requests
      */
@@ -155,9 +154,7 @@ var pktApi = (function() {
      *  The return format: { cookieName:cookieValue, cookieName:cookieValue, ... }
     */
     function getCookiesFromPocket() {
-
-        var cookieManager = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
-        var pocketCookies = cookieManager.getCookiesFromHost(pocketSiteHost, {});
+        var pocketCookies = Services.cookies.getCookiesFromHost(pocketSiteHost, {});
         var cookies = {};
         while (pocketCookies.hasMoreElements()) {
             var cookie = pocketCookies.getNext().QueryInterface(Ci.nsICookie2);
@@ -257,6 +254,7 @@ var pktApi = (function() {
         request.open("POST", url, true);
         request.onreadystatechange = function(e) {
             if (request.readyState == 4) {
+
                 if (request.status === 200) {
                     // There could still be an error if the response is no valid json
                     // or does not have status = 1
@@ -343,7 +341,6 @@ var pktApi = (function() {
             path: "/firefox/save",
             data: sendData,
             success(data) {
-
                 // Update premium status, tags and since
                 var tags = data.tags;
                 if ((typeof tags !== "undefined") && Array.isArray(tags)) {
@@ -361,6 +358,55 @@ var pktApi = (function() {
                 // Save since value for further requests
                 setSetting("latestSince", data.since);
 
+                // Define variant for ho2
+                var ho2Test = getSetting("test.ho2");
+                if (typeof ho2Test === "undefined" && data.flags) {
+                    setSetting("test.ho2", data.flags.show_ffx_mobile_prompt);
+                }
+                data.ho2 = getSetting("test.ho2");
+
+                if (options.success) {
+                    options.success.apply(options, Array.apply(null, arguments));
+                }
+            },
+            error: options.error
+        });
+    }
+
+    /**
+     * Get a preview for saved URL
+     * @param {string} url     URL of the link
+     * @param {Object | undefined} options Can provide a `success` callback and an `error` callback.
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function getArticleInfo(url, options) {
+        return apiRequest({
+            path: '/getItemPreview',
+            data: {
+                access_token: getAccessToken(),
+                url,
+            },
+            success(data) {
+                if (options.success) {
+                    options.success.apply(options, Array.apply(null, arguments));
+                }
+            },
+            error: options.error
+        });
+    }
+
+    /**
+     * Request a email for mobile apps
+     * @param {Object | undefined} options Can provide a `success` callback and an `error` callback.
+     * @return {Boolean} Returns Boolean whether the api call started sucessfully
+     */
+    function getMobileDownload(options) {
+        return apiRequest({
+            path: '/firefox/get-app',
+            data: {
+                access_token: getAccessToken()
+            },
+            success(data) {
                 if (options.success) {
                     options.success.apply(options, Array.apply(null, arguments));
                 }
@@ -646,5 +692,7 @@ var pktApi = (function() {
         getSuggestedTagsForItem,
         getSuggestedTagsForURL,
         getSignupPanelTabTestVariant,
+        getArticleInfo,
+        getMobileDownload
     };
 }());

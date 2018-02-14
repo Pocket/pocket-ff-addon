@@ -29,6 +29,9 @@ var PKT_SAVED_OVERLAY = function(options) {
     this.cxt_suggested = 0;
     this.cxt_removed = 0;
     this.justaddedsuggested = false;
+    this.fxasignedin = false;
+    this.premiumDetailsAdded = false;
+    this.freezeHeight = false;
     this.fillTagContainer = function(tags, container, tagclass) {
         container.children().remove();
         for (var i = 0; i < tags.length; i++) {
@@ -229,10 +232,12 @@ var PKT_SAVED_OVERLAY = function(options) {
                 myself.checkPlaceholderStatus();
             },
             onShowDropdown() {
-                thePKT_SAVED.sendMessage("expandSavePanel");
+                if (!myself.freezeHeight)
+                    thePKT_SAVED.sendMessage("expandSavePanel");
             },
             onHideDropdown() {
-                thePKT_SAVED.sendMessage("collapseSavePanel");
+                if (!myself.freezeHeight)
+                    thePKT_SAVED.sendMessage("collapseSavePanel");
             }
         });
         $("body").on("keydown", function(e) {
@@ -377,12 +382,37 @@ var PKT_SAVED_OVERLAY = function(options) {
         }
         $(".pkt_ext_containersaved").addClass("pkt_ext_container_detailactive").removeClass("pkt_ext_container_finalstate");
 
+        if (!initobj.accountState.has_activated === !initobj.accountState.has_mobile) {
+            myself.createTmpAccountLoginPanel();
+        }
+        else if (initobj.ho2 !== 'control' && !initobj.accountState.has_mobile) {
+            myself.createSendToMobilePanel(initobj.ho2, initobj.displayName);
+        }
+        myself.freezeHeight = (!initobj.accountState.has_activated === !initobj.accountState.has_mobile)
+            || (initobj.ho2 !== 'control' && !initobj.accountState.has_mobile);
+
         myself.fillUserTags();
         if (myself.suggestedTagsLoaded) {
             myself.startCloseTimer();
         } else {
             myself.fillSuggestedTags();
         }
+    };
+    this.createTmpAccountLoginPanel = function() {
+        $('body').append(Handlebars.templates.saved_tmplogin({fxasignedin: myself.fxasignedin}));
+        thePKT_SAVED.sendMessage('resizePanel', { width: 350, height: 280 });
+
+        $('#pkt_ext_tmp_account_signup').click(function() {
+            if (myself.fxasignedin) {
+                window.open('https://getpocket.com/ff_signup?s=ffi&t=signupff&v=ghost_upsell')
+            }
+            else {
+                window.open('https://getpocket.com/signup?force=email&src=extension&s=ffi&t=signupemail&v=ghost_upsell');
+            }
+        });
+    }
+    this.createSendToMobilePanel = function(ho2, displayName) {
+        PKT_SENDTOMOBILE.create(ho2, displayName, myself.premiumDetailsAdded);
     };
     this.sanitizeText = function(s) {
         var sanitizeMap = {
@@ -459,6 +489,7 @@ PKT_SAVED_OVERLAY.prototype = {
     },
     createPremiumFunctionality() {
         if (this.premiumStatus && !$(".pkt_ext_suggestedtag_detail").length) {
+            this.premiumDetailsAdded = true;
             $("body").append(Handlebars.templates.saved_premiumshell(this.dictJSON));
             $(".pkt_ext_initload").append(Handlebars.templates.saved_premiumextras(this.dictJSON));
         }
@@ -493,6 +524,10 @@ PKT_SAVED.prototype = {
         var url = window.location.href.match(/premiumStatus=([\w|\d|\.]*)&?/);
         if (url && url.length > 1) {
             myself.overlay.premiumStatus = (url[1] == "1");
+        }
+        var fxasignedin = window.location.href.match(/fxasignedin=([\w|\d|\.]*)&?/);
+        if (fxasignedin && fxasignedin.length > 1) {
+            myself.overlay.fxasignedin = (fxasignedin[1] == "1");
         }
         var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
         if (host && host.length > 1) {
