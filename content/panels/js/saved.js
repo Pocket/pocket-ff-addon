@@ -382,7 +382,7 @@ var PKT_SAVED_OVERLAY = function(options) {
         }
         $(".pkt_ext_containersaved").addClass("pkt_ext_container_detailactive").removeClass("pkt_ext_container_finalstate");
 
-        if (!initobj.accountState.has_activated === !initobj.accountState.has_mobile) {
+        if (!initobj.accountState.has_activated && !initobj.accountState.has_mobile) {
             myself.createTmpAccountLoginPanel();
         }
         else if (initobj.ho2 !== 'control' && !initobj.accountState.has_mobile) {
